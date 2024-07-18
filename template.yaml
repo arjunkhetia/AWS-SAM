@@ -15,6 +15,7 @@ Globals:
     Environment:
       Variables:
         BUCKET_NAME: !Ref S3BucketName
+        TABLE_NAME: !Ref DBTableName
   Api:
     TracingEnabled: true
     Cors:
@@ -36,6 +37,10 @@ Parameters:
     Type: String
     Description: The name of the S3 bucket to upload files to
     Default: "aws-sam-s3-bucket"
+  DBTableName:
+    Type: String
+    Description: The name of the Database table to store data in
+    Default: "users"
 
 Resources:
 # APIs
@@ -80,6 +85,14 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name: FileUploadWithS3Api
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+  GetFromDataBaseApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: GetFromDataBaseApi
       StageName: !Ref Stage
       Cors:
         AllowOrigin: "'*'"
@@ -170,6 +183,21 @@ Resources:
             RestApiId:
               Ref: FileUploadWithS3Api
 
+  GetFromDataBaseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-GetFromDataBaseFunction
+      Handler: src/database/get.handler
+      Description: Function to get data from database
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /get-from-database
+            Method: GET
+            RestApiId:
+              Ref: GetFromDataBaseApi
+
 Outputs:
   Region:
     Description: "AWS Region"
@@ -198,3 +226,7 @@ Outputs:
   ValidateRequestApiUrl:
     Description: "URL of the ValidateRequest API endpoint"
     Value: !Sub "https://${ValidateRequestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/validate-request"
+
+  GetFromDataBaseApiUrl:
+    Description: "URL of the GetFromDataBase API endpoint"
+    Value: !Sub "https://${GetFromDataBaseApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/get-from-database"

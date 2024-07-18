@@ -39,6 +39,7 @@
   "dependencies": {
     "aws-sdk": "^2.1659.0",
     "lambda-multipart-parser": "^1.0.1",
-    "middy": "^0.36.0"
+    "middy": "^0.36.0",
+    "pg": "^8.12.0"
   }
 }
