@@ -1,0 +1,44 @@
+{
+  "name": "aws-sam",
+  "version": "1.0.0",
+  "description": "AWS SAM (Lambda + API Gateway) Project",
+  "main": "index.js",
+  "config": {
+    "region": "ap-south-1",
+    "stack_name": "aws-sam-stack",
+    "bucket_name": "aws-sam-s3-bucket",
+    "template_file": "sam.yaml",
+    "dev_stack_name": "aws-sam-dev-stack",
+    "dev_template_file": "sam-dev.yaml"
+  },
+  "scripts": {
+    "start": "sam local start-api",
+    "validate": "sam validate --lint",
+    "build": "sam build --region $npm_package_config_region",
+    "package": "sam package --s3-bucket $npm_package_config_bucket_name --template-file template.yaml --output-template-file $npm_package_config_template_file",
+    "deploy": "sam deploy --s3-bucket $npm_package_config_bucket_name --stack-name $npm_package_config_stack_name --confirm-changeset --on-failure DELETE --capabilities CAPABILITY_IAM",
+    "describe": "aws cloudformation describe-stacks --region $npm_package_config_region --stack-name $npm_package_config_stack_name --query 'Stacks[].Outputs'",
+    "package:dev": "sam package --s3-bucket $npm_package_config_bucket_name --template-file template.yaml --output-template-file $npm_package_config_dev_template_file",
+    "deploy:dev": "sam deploy --s3-bucket $npm_package_config_bucket_name --stack-name $npm_package_config_dev_stack_name --confirm-changeset --on-failure DELETE --capabilities CAPABILITY_IAM --parameter-overrides Stage=dev",
+    "describe:dev": "aws cloudformation describe-stacks --region $npm_package_config_region --stack-name $npm_package_config_dev_stack_name --query 'Stacks[].Outputs'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arjunkhetia/AWS-SAM.git"
+  },
+  "keywords": [
+    "AWS",
+    "SAM"
+  ],
+  "author": "Arjun Khetia",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arjunkhetia/AWS-SAM/issues"
+  },
+  "homepage": "https://github.com/arjunkhetia/AWS-SAM#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1659.0",
+    "lambda-multipart-parser": "^1.0.1",
+    "middy": "^0.36.0"
+  }
+}

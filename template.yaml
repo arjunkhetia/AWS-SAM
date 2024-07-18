@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 
+  - AWS::LanguageExtensions
+  - AWS::Serverless-2016-10-31
+Description: AWS SAM (Lambda + API Gateway) Project
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    MemorySize: 128
+    Timeout: 10
+    Tracing: Active
+    Environment:
+      Variables:
+        BUCKET_NAME: !Ref S3BucketName
+  Api:
+    TracingEnabled: true
+    Cors:
+      AllowOrigin: "'*'"
+      AllowHeaders: "'*'"
+      AllowMethods: "'*'"
+    BinaryMediaTypes:
+      - "multipart/form-data"
+
+Parameters:
+  Stage:
+    Type: String
+    Description: Stage name for the API Gateway deployment
+    Default: api
+    AllowedValues:
+      - dev
+      - api
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 bucket to upload files to
+    Default: "aws-sam-s3-bucket"
+
+Resources:
+# APIs
+  UserGetApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: UserGetApi
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+  UserPostApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: UserPostApi
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+  ValidateRequestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: ValidateRequestApi
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+  UserGetWithJWTApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: UserGetWithJWTApi
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+      Auth:
+        DefaultAuthorizer: JWTAuthorizer
+        Authorizers:
+          JWTAuthorizer:
+            FunctionArn: !GetAtt JWTAuthorizerFunction.Arn
+
+  FileUploadWithS3Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: FileUploadWithS3Api
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+# Functions
+  UserGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-UserGetFunction
+      Handler: src/user/get.handler
+      Description: Function to get user information
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user
+            Method: GET
+            RestApiId:
+              Ref: UserGetApi
+
+  UserPostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-UserPostFunction
+      Handler: src/user/post.handler
+      Description: Function to post data of user
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user
+            Method: POST
+            RestApiId:
+              Ref: UserPostApi
+
+  ValidateRequestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-ValidateRequestFunction
+      Handler: src/validateRequest.handler
+      Description: Function to validate request
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /validate-request
+            Method: POST
+            RestApiId:
+              Ref: ValidateRequestApi
+
+  JWTAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: JWTAuthorizerFunction
+      Handler: src/authorizer/jwt.handler
+      Description: Function to handle JWT authorization
+
+  UserGetWithJWTFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-UserGetWithJWTFunction
+      Handler: src/user/getWithJWT.handler
+      Description: Function to get user with JWT authorization
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /user-with-jwt
+            Method: GET
+            RestApiId:
+              Ref: UserGetWithJWTApi
+
+  FileUploadWithS3Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-FileUploadWithS3Function
+      Handler: src/file/uploadWithS3.handler
+      Description: Function to handle file upload with S3
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Sub ${S3BucketName}
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /file-upload-with-s3
+            Method: POST
+            RestApiId:
+              Ref: FileUploadWithS3Api
+
+Outputs:
+  Region:
+    Description: "AWS Region"
+    Value: !Ref AWS::Region
+
+  RestAPI:
+    Description: "API Gateway endpoint"
+    Value: !Sub "https://${UserGetApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  
+  UserGetApiUrl:
+    Description: "URL of the UserGet API endpoint"
+    Value: !Sub "https://${UserGetApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/user"
+
+  UserPostApiUrl:
+    Description: "URL of the UserPost API endpoint"
+    Value: !Sub "https://${UserPostApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/user"
+
+  UserGetWithJWTApiUrl:
+    Description: "URL of the UserGetWithJWT API endpoint"
+    Value: !Sub "https://${UserGetWithJWTApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/user-with-jwt"
+
+  FileUploadWithS3ApiUrl:
+    Description: "URL of the FileUploadWithS3 API endpoint"
+    Value: !Sub "https://${FileUploadWithS3Api}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/file-upload-with-s3"
+
+  ValidateRequestApiUrl:
+    Description: "URL of the ValidateRequest API endpoint"
+    Value: !Sub "https://${ValidateRequestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/validate-request"
