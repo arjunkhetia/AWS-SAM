@@ -104,6 +104,9 @@ Resources:
       FunctionName: !Sub ${Stage}-UserGetFunction
       Handler: src/user/get.handler
       Description: Function to get user information
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce # or Canary10Percent5Minutes or Linear10PercentEvery10Minutes
       Events:
         Api:
           Type: Api
@@ -119,6 +122,9 @@ Resources:
       FunctionName: !Sub ${Stage}-UserPostFunction
       Handler: src/user/post.handler
       Description: Function to post data of user
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
       Events:
         Api:
           Type: Api
@@ -134,6 +140,9 @@ Resources:
       FunctionName: !Sub ${Stage}-ValidateRequestFunction
       Handler: src/validateRequest.handler
       Description: Function to validate request
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
       Events:
         Api:
           Type: Api
@@ -149,6 +158,9 @@ Resources:
       FunctionName: JWTAuthorizerFunction
       Handler: src/authorizer/jwt.handler
       Description: Function to handle JWT authorization
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
 
   UserGetWithJWTFunction:
     Type: AWS::Serverless::Function
@@ -156,6 +168,9 @@ Resources:
       FunctionName: !Sub ${Stage}-UserGetWithJWTFunction
       Handler: src/user/getWithJWT.handler
       Description: Function to get user with JWT authorization
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
       Events:
         Api:
           Type: Api
@@ -171,6 +186,9 @@ Resources:
       FunctionName: !Sub ${Stage}-FileUploadWithS3Function
       Handler: src/file/uploadWithS3.handler
       Description: Function to handle file upload with S3
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
       Policies:
         - S3FullAccessPolicy:
             BucketName: !Sub ${S3BucketName}
@@ -189,6 +207,9 @@ Resources:
       FunctionName: !Sub ${Stage}-GetFromDataBaseFunction
       Handler: src/database/get.handler
       Description: Function to get data from database
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
       Events:
         Api:
           Type: Api
