@@ -43,6 +43,20 @@ Parameters:
     Default: "users"
 
 Resources:
+
+# Layers
+  UUIDLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: uuid
+      Description: UUID Generator
+      ContentUri: src/uuid
+      CompatibleRuntimes:
+        - nodejs20.x
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: nodejs20.x
+
 # APIs
   UserGetApi:
     Type: AWS::Serverless::Api
@@ -93,6 +107,14 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Name: GetFromDataBaseApi
+      StageName: !Ref Stage
+      Cors:
+        AllowOrigin: "'*'"
+
+  DataWithLayerApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: DataWithLayerApi
       StageName: !Ref Stage
       Cors:
         AllowOrigin: "'*'"
@@ -219,6 +241,26 @@ Resources:
             RestApiId:
               Ref: GetFromDataBaseApi
 
+  DataWithLayerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Stage}-DataWithLayerFunction
+      Handler: src/data/withLayer.handler
+      Description: Function to handle data with layer
+      Layers:
+        - !Ref UUIDLayer
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: AllAtOnce
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /data-with-layer
+            Method: GET
+            RestApiId:
+              Ref: DataWithLayerApi
+
 Outputs:
   Region:
     Description: "AWS Region"
@@ -251,3 +293,7 @@ Outputs:
   GetFromDataBaseApiUrl:
     Description: "URL of the GetFromDataBase API endpoint"
     Value: !Sub "https://${GetFromDataBaseApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/get-from-database"
+
+  DataWithLayerApiUrl:
+    Description: "URL of the DataWithLayer API endpoint"
+    Value: !Sub "https://${DataWithLayerApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/data-with-layer"
